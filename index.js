@@ -26,7 +26,7 @@ const PORT = process.env.PORT || 8080;
 // Connect to the MongoDB database
 async function connectToDatabase() {
   try {
-    await mongoose.connect('mongodb+srv://iwebsoul:ZkK7vXCmICDXqsM6@cluster0.meodf1o.mongodb.net/', {
+    await mongoose.connect('mongodb+srv://riyasurena137:R8Emr9gv8LkpVLNg@cluster0.q3ocj1n.mongodb.net/eikon', {
       useNewUrlParser: true,
       useUnifiedTopology: true,
     });
@@ -42,7 +42,11 @@ server.use(morgan('default'));
 
 // Serve static files from the 'public' directory
 server.use(express.static('public'));
-server.use(cors());
+server.use(cors({
+  origin:["http://eikon-server.vercel.app/"],
+  methods:["POST","GET"],
+  credentials:true
+}));
 
 const db = mongoose.connection;
 db.on('error', console.error.bind(console, 'MongoDB connection error:'));
@@ -50,7 +54,7 @@ db.once('open', () => {
   console.log('Connected to MongoDB');
 });
 
-// Configure Multer for handling file uploads
+ 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     cb(null, path.join(__dirname, 'public', 'images'));
@@ -82,6 +86,23 @@ async function setupRoutes() {
   server.use('/imageUpload', ImageUploadRouter.router);
   server.use('/loginId', LoginIdRouter.router);
   server.use('/images', express.static('public/images'));
+
+  // Add a route to fetch data from MongoDB
+  server.get('http://eikon-server.vercel.app/', async (req, res) => {
+    try {
+      const db = await connectToDatabase(); // Connect to the database
+      const collection = db.collection('eikon'); // Replace with your collection name
+
+      // Query MongoDB to retrieve data (modify this query as needed)
+      const data = await collection.find({}).toArray();
+
+      // Send the retrieved data as a JSON response
+      res.json({ data });
+    } catch (err) {
+      console.error('Error fetching data from MongoDB:', err);
+      res.status(500).json({ error: 'Error fetching data from MongoDB' });
+    }
+  });
 }
 
 const imageUrls = [];
@@ -108,15 +129,15 @@ server.get('/listImages', (req, res) => {
   });
 });
 
-
-  server.post('/imageUpload', upload.single('image'), (req, res) => {
-    if (!req.file) {
-      return res.status(400).send('No file uploaded.');
-    }
+server.post('/imageUpload', upload.single('image'), (req, res) => {
+  if (!req.file) {
+    return res.status(400).send('No file uploaded.');
+  }
 
   // Get the image name from the uploaded file's filename
   const imageName = req.file.filename;
-console.log(imageName)
+  console.log(imageName);
+
   // Add the image name to the imageUrls array
   imageUrls.push(imageName);
 
@@ -126,8 +147,7 @@ console.log(imageName)
   // You can do further processing with the uploaded file here
   // For now, just send a success response
   res.send('File uploaded successfully.');
-}
-);
+});
 
 server.delete('/deleteImage/:filename', (req, res) => {
   const filename = req.params.filename;
@@ -148,7 +168,6 @@ server.delete('/deleteImage/:filename', (req, res) => {
     res.json({ message: 'Image deleted successfully' });
   });
 });
-
 
 // Start the server on port 8080
 async function startServer() {
