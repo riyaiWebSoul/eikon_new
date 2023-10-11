@@ -43,7 +43,7 @@ server.use(morgan('default'));
 // Serve static files from the 'public' directory
 server.use(express.static('public'));
 server.use(cors({
-  origin:["http://eikon-server.vercel.app/"],
+  origin:["https://deploy-mean-1whq.vercel.app"],
   methods:["POST","GET"],
   credentials:true
 }));
@@ -88,7 +88,7 @@ async function setupRoutes() {
   server.use('/images', express.static('public/images'));
 
   // Add a route to fetch data from MongoDB
-  server.get('http://eikon-server.vercel.app/', async (req, res) => {
+  server.get('/http://localhost:8080/', async (req, res) => {
     try {
       const db = await connectToDatabase(); // Connect to the database
       const collection = db.collection('eikon'); // Replace with your collection name
