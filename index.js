@@ -62,7 +62,7 @@ const storage = multer.diskStorage({
   },
 });
 
-const upload = multer({ storage: storage });
+const upload = multer({ storage });
 
 // Define your routes using async functions
 async function setupRoutes() {
@@ -81,11 +81,12 @@ async function setupRoutes() {
   server.use('/drList', DrList.router);
   server.use('/imageUpload', ImageUploadRouter.router);
   server.use('/loginId', LoginIdRouter.router);
+  server.use('/images', express.static('public/images'));
 }
 
 const imageUrls = [];
 
-server.get('/imageUploads', (req, res) => {
+server.get('/listImages', (req, res) => {
   const imageDir = path.join(__dirname, 'public', 'images');
 
   // Use the 'fs' module to read the contents of the directory
@@ -108,8 +109,7 @@ server.get('/imageUploads', (req, res) => {
 });
 
 
-  server.post('/imageUploads', upload.single('image'), (req, res) => {
-    res.status(200).json({ message: 'Image uploaded successfully' });
+  server.post('/imageUpload', upload.single('image'), (req, res) => {
     if (!req.file) {
       return res.status(400).send('No file uploaded.');
     }
